@@ -23,7 +23,7 @@ app.post("/chat", async (req, res) => {
     const message = req.body.message || "";
 
     const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash-liter",
+      model: "gemini-2.0-flash",
       contents:
       "সব সময় বাংলায় উত্তর দিবে। প্রশ্ন: " + message
     });
