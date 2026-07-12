@@ -1,22 +1,51 @@
 const express = require("express");
+const { GoogleGenAI } = require("@google/genai");
+
 const app = express();
 
 app.use(express.json());
 
-app.get("/", (req, res) => {
-  res.send("ESP32 AI Server Running");
+// Gemini AI
+const ai = new GoogleGenAI({
+  apiKey: process.env.GEMINI_API_KEY,
 });
 
-app.post("/chat", (req, res) => {
-  const message = req.body.message || "";
+// সার্ভার চালু আছে কিনা
+app.get("/", (req, res) => {
+  res.send("BOSS AI Server Running");
+});
 
-  res.json({
-    reply: "আপনি বলেছেন: " + message
-  });
+// ESP32 এখানে প্রশ্ন পাঠাবে
+app.post("/chat", async (req, res) => {
+
+  try {
+
+    const message = req.body.message || "";
+
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents:
+      "সব সময় বাংলায় উত্তর দিবে। প্রশ্ন: " + message
+    });
+
+    res.json({
+      reply: response.text
+    });
+
+  } catch (err) {
+
+    console.log(err);
+
+    res.json({
+      reply: "দুঃখিত, AI এখন উত্তর দিতে পারছে না।"
+    });
+
+  }
+
 });
 
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
-  console.log("Server running on port " + PORT);
+  console.log("BOSS AI Server Running on Port " + PORT);
 });
