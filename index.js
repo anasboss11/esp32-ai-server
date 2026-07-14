@@ -1,43 +1,39 @@
 const express = require("express");
-const { GoogleGenAI } = require("@google/genai");
+const OpenAI = require("openai");
 
 const app = express();
 
 app.use(express.json());
 
-// Gemini AI
-const ai = new GoogleGenAI({
-  apiKey: process.env.GEMINI_API_KEY,
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
 });
 
-// সার্ভার চালু আছে কিনা
 app.get("/", (req, res) => {
   res.send("BOSS AI Server Running");
 });
 
-// ESP32 এখানে প্রশ্ন পাঠাবে
 app.post("/chat", async (req, res) => {
 
   try {
 
     const message = req.body.message || "";
 
-    const response = await ai.models.generateContent({
-      model: "gemini-2.0-flash",
-      contents:
-      "সব সময় বাংলায় উত্তর দিবে। প্রশ্ন: " + message
+    const response = await openai.responses.create({
+      model: "gpt-5.4-mini",
+      input: "সব সময় বাংলায় উত্তর দাও। প্রশ্ন: " + message
     });
 
     res.json({
-      reply: response.text
+      reply: response.output_text
     });
 
   } catch (err) {
 
-    console.log(err);
+    console.error(err);
 
     res.json({
-      reply: "দুঃখিত, AI এখন উত্তর দিতে পারছে না।"
+      reply: "দুঃখিত, OpenAI এখন উত্তর দিতে পারছে না।"
     });
 
   }
