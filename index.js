@@ -5,62 +5,65 @@ const OpenAI = require("openai");
 const app = express();
 app.use(express.json());
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+const client = new OpenAI({
+  apiKey: process.env.LITEROUTER_API_KEY,
+  baseURL: "https://api.literouter.com/v1"
 });
 
-// Render server check
 app.get("/", (req, res) => {
-  res.status(200).send("BOSS AI Server Running");
+  res.send("BOS AI Server Running");
 });
 
-// AI Chat API
 app.post("/chat", async (req, res) => {
   try {
-    const message =
-      (req.body && req.body.message)
-        ? req.body.message
-        : "";
+    const message = req.body.message || "";
 
     if (!message.trim()) {
       return res.status(400).json({
-        status: "server_error",
-        reply: "Message is empty"
+        status: "error",
+        reply: "কোনো প্রশ্ন পাওয়া যায়নি।"
       });
     }
 
-    const response = await openai.responses.create({
-      model: "gpt-5.4-mini",
-      input: "সব সময় বাংলায় উত্তর দাও। প্রশ্ন: " + message
+    const response = await client.chat.completions.create({
+      model: "glm-5.3-flash:free",
+      messages: [
+        {
+          role: "system",
+          content: "তুমি BOS AI। সব সময় বাংলায় সহজ ও সুন্দরভাবে উত্তর দাও।"
+        },
+        {
+          role: "user",
+          content: message
+        }
+      ],
+      temperature: 0.7,
+      max_tokens: 500
     });
 
-    const reply = response.output_text || "";
-
-    if (!reply.trim()) {
-      return res.status(200).json({
-        status: "ai_error",
-        reply: "AI উত্তর দিতে পারছে না।"
-      });
+    const reply =
+      response.choices?.[0]?.message?.content || "";
+        if (!reply.trim()) {
+      throw new Error("AI returned empty reply");
     }
 
-    return res.status(200).json({
+    res.json({
       status: "ok",
       reply: reply
     });
 
   } catch (err) {
-    console.error("OpenAI API Error:", err);
+    console.error("LiteRouter Error:", err);
 
-    return res.status(200).json({
+    res.status(502).json({
       status: "ai_error",
-      reply: "AI উত্তর দিতে পারছে না।"
+      reply: "দুঃখিত, AI এখন উত্তর দিতে পারছে না।"
     });
   }
 });
 
-// Server চালু
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
-  console.log("BOSS AI Server Running on Port " + PORT);
+  console.log("BOS AI Server Running on Port " + PORT);
 });
